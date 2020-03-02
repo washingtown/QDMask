@@ -17,11 +17,11 @@ namespace QDMask
     public partial class Form1 : Form
     {
         private IWebDriver webDriver;
-        //private string mailUrl = "http://kzyynew.qingdao.gov.cn:81/dist/index.html#/preOrder";
-        //private string sfUrl = "http://kzyynew.qingdao.gov.cn:81/dist/index.html#/SFOrder";
-        private string mailUrl = "http://127.0.0.1:5000/preOrder";
-        private string sfUrl = "http://127.0.0.1:5000/SFOrder";
-        private string iniPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)+@"\\config.ini";
+        private string mailUrl = "http://kzyynew.qingdao.gov.cn:81/dist/index.html#/preOrder";
+        private string sfUrl = "http://kzyynew.qingdao.gov.cn:81/dist/index.html#/SFOrder";
+        //private string mailUrl = "http://127.0.0.1:5000/preOrder";
+        //private string sfUrl = "http://127.0.0.1:5000/SFOrder";
+        private string iniPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData)+@"\\QDMaskConfig.ini";
         private IniFile ini = null;
         private Dictionary<string, string[]> addressDict = new Dictionary<string, string[]>
         {
@@ -38,6 +38,7 @@ namespace QDMask
         };
         private bool mailFilled=false;
         private bool sfFilled = false;
+        private bool filled = false;
         public Form1()
         {
             InitializeComponent();
@@ -61,7 +62,7 @@ namespace QDMask
                 IWebElement okElement = webDriver.FindElement(By.ClassName("vux-check-icon"));
                 okElement.Click();
                 IWebElement[] inputText = webDriver.FindElements(By.ClassName("weui-input")).ToArray();
-                inputText[0].SendKeys(textBoxName.Text);
+                inputText[0].SendKeys(comboBoxName.Text);
                 inputText[1].SendKeys(textBoxPhone.Text);
                 inputText[2].SendKeys(textBoxID.Text);
                 IWebElement[] selects = webDriver.FindElements(By.ClassName("weui-select")).ToArray();
@@ -72,20 +73,22 @@ namespace QDMask
                 webDriver.FindElement(By.ClassName("weui-textarea")).SendKeys(textBoxAddress.Text);
                 textBoxMessage.Text = "信息已填入，快去填写验证码\r\n祝好运！";
                 FlashWin();
-                if (url == mailUrl)
-                    mailFilled = true;
-                if (url == sfUrl)
-                    sfFilled = true;
+                //if (url == mailUrl)
+                //    mailFilled = true;
+                //if (url == sfUrl)
+                //    sfFilled = true;
+                filled = true;
                 timer1.Enabled = false;
             }
             catch (NoSuchElementException)
             {
                 if (webDriver.FindElement(By.TagName("body")).Text.Contains("预约已结束"))
                 {
-                    if (url == mailUrl)
-                        mailFilled = true;
-                    if (url == sfUrl)
-                        sfFilled = true;
+                    //if (url == mailUrl)
+                    //    mailFilled = true;
+                    //if (url == sfUrl)
+                    //    sfFilled = true;
+                    filled = true;
                 }
                 textBoxMessage.Text = "时间已到，预约还未开启，继续尝试";
                 return;
@@ -126,13 +129,16 @@ namespace QDMask
                 File.CreateText(iniPath);
             }
             this.ini = new IniFile(iniPath);
-            textBoxName.Text = ini.IniReadValue("info", "Name");
-            textBoxPhone.Text = ini.IniReadValue("info", "Phone");
-            textBoxID.Text = ini.IniReadValue("info", "ID");
-            comboBoxDistrict.Text = ini.IniReadValue("info", "District");
-            comboBoxStreet.Text = ini.IniReadValue("info", "Street");
-            textBoxAddress.Text = ini.IniReadValue("info", "Address");
-            comboBoxPortal.SelectedIndex = 0;
+            foreach(string section in ini.IniGetSections())
+            {
+                if (section != "info")
+                {
+                    comboBoxName.Items.Add(section);
+                }
+            }
+            int nameIndex = 0;
+            int.TryParse(ini.IniReadValue("info", "NameIndex"), out nameIndex);
+            comboBoxName.SelectedIndex = Math.Min(nameIndex, comboBoxName.Items.Count - 1);
             //启动Chrome
             ChromeOptions options = new ChromeOptions();
             options.AddArgument("disable-web-security");
@@ -141,12 +147,18 @@ namespace QDMask
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-            ini.IniWriteValue("info", "Name", textBoxName.Text);
-            ini.IniWriteValue("info", "Phone", textBoxPhone.Text);
-            ini.IniWriteValue("info", "ID", textBoxID.Text);
-            ini.IniWriteValue("info", "District", comboBoxDistrict.Text);
-            ini.IniWriteValue("info", "Street", comboBoxStreet.Text);
-            ini.IniWriteValue("info", "Address", textBoxAddress.Text);
+            ini.IniWriteValue("info", "NameIndex", comboBoxName.SelectedIndex.ToString());
+            string section = comboBoxName.Text;
+            if (!string.IsNullOrEmpty(section))
+            {
+                ini.IniWriteValue(section, "PortalIndex", comboBoxPortal.SelectedIndex.ToString());
+                ini.IniWriteValue(section, "Name", comboBoxName.Text);
+                ini.IniWriteValue(section, "Phone", textBoxPhone.Text);
+                ini.IniWriteValue(section, "ID", textBoxID.Text);
+                ini.IniWriteValue(section, "District", comboBoxDistrict.Text);
+                ini.IniWriteValue(section, "Street", comboBoxStreet.Text);
+                ini.IniWriteValue(section, "Address", textBoxAddress.Text);
+            }
             try
             {
                 this.webDriver.Quit();
@@ -180,39 +192,57 @@ namespace QDMask
         private void Timer1_Tick(object sender, EventArgs e)
         {
             DateTime now = DateTime.Now;
-            DateTime mailStart = new DateTime(now.Year, now.Month, now.Day, 9, 30, 0);
+            DateTime mailStart = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0);
             DateTime sfStart = new DateTime(now.Year, now.Month, now.Day, 10, 0, 0);
-            if (now < mailStart)
+            DateTime start = DateTime.Now;
+            string url = null;
+            if (comboBoxPortal.Text == "邮政")
+            {
+                start = mailStart;
+                url = mailUrl;
+            }
+            else
+            {
+                start = sfStart;
+                url = sfUrl;
+            }
+            if (now < start)
             {
                 textBoxMessage.Text = String.Format(
-                    "预约尚未开始，下次为：邮政预约，时间：{0},\r\n距离开始还有:{1}",
+                    "预约尚未开始，开始时间：{0},\r\n距离开始还有:{1}",
                     mailStart.ToString(),(mailStart-now).ToString(@"hh\:mm\:ss")
                     );
                 return;
             }
-            if (now > mailStart && now <sfStart && !mailFilled)
+            if (now > start && !filled)
             {
-                fillInfo(mailUrl);
+                fillInfo(url);
                 return;
             }
-            if (now < sfStart)
-            {
-                textBoxMessage.Text = String.Format(
-                    "预约尚未开始，下次为：顺丰预约，时间：{0},\r\n距离开始还有:{1}",
-                    sfStart.ToString(), (sfStart - now).ToString(@"hh\:mm\:ss")
-                    );
-                return;
-            }
-            if(now>sfStart && !sfFilled)
-            {
-                fillInfo(sfUrl);
-                return;
-            }
-            if (now > sfStart && sfFilled)
+            if (now > start && filled)
             {
                 textBoxMessage.Text = "今天预约已结束，明天再试试吧！";
                 return;
             }
+        }
+
+        private void ComboBoxPortal_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            filled = false;
+            timer1.Enabled = true;
+        }
+
+        private void ComboBoxName_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string section = comboBoxName.Text;
+            textBoxPhone.Text = ini.IniReadValue(section, "Phone");
+            textBoxID.Text = ini.IniReadValue(section, "ID");
+            comboBoxDistrict.Text = ini.IniReadValue(section, "District");
+            comboBoxStreet.Text = ini.IniReadValue(section, "Street");
+            textBoxAddress.Text = ini.IniReadValue(section, "Address");
+            int portalSelectIndex = 0;
+            int.TryParse(ini.IniReadValue(section, "PortalIndex"), out portalSelectIndex);
+            comboBoxPortal.SelectedIndex = Math.Min(portalSelectIndex,comboBoxPortal.Items.Count-1);
         }
     }
 }

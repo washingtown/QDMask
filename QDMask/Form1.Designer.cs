@@ -30,7 +30,6 @@
         {
             this.components = new System.ComponentModel.Container();
             this.label1 = new System.Windows.Forms.Label();
-            this.textBoxName = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.textBoxPhone = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
@@ -45,6 +44,7 @@
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.label7 = new System.Windows.Forms.Label();
             this.comboBoxPortal = new System.Windows.Forms.ComboBox();
+            this.comboBoxName = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // label1
@@ -56,13 +56,6 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "姓名";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // textBoxName
-            // 
-            this.textBoxName.Location = new System.Drawing.Point(110, 70);
-            this.textBoxName.Name = "textBoxName";
-            this.textBoxName.Size = new System.Drawing.Size(203, 28);
-            this.textBoxName.TabIndex = 2;
             // 
             // label2
             // 
@@ -189,12 +182,23 @@
             this.comboBoxPortal.Name = "comboBoxPortal";
             this.comboBoxPortal.Size = new System.Drawing.Size(203, 26);
             this.comboBoxPortal.TabIndex = 1;
+            this.comboBoxPortal.SelectedIndexChanged += new System.EventHandler(this.ComboBoxPortal_SelectedIndexChanged);
+            // 
+            // comboBoxName
+            // 
+            this.comboBoxName.FormattingEnabled = true;
+            this.comboBoxName.Location = new System.Drawing.Point(110, 70);
+            this.comboBoxName.Name = "comboBoxName";
+            this.comboBoxName.Size = new System.Drawing.Size(203, 26);
+            this.comboBoxName.TabIndex = 2;
+            this.comboBoxName.SelectedIndexChanged += new System.EventHandler(this.ComboBoxName_SelectedIndexChanged);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(685, 406);
+            this.ClientSize = new System.Drawing.Size(708, 418);
+            this.Controls.Add(this.comboBoxName);
             this.Controls.Add(this.comboBoxPortal);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.textBoxMessage);
@@ -208,7 +212,6 @@
             this.Controls.Add(this.label3);
             this.Controls.Add(this.textBoxPhone);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.textBoxName);
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "抢口罩";
@@ -222,7 +225,6 @@
         #endregion
 
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox textBoxName;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textBoxPhone;
         private System.Windows.Forms.Label label3;
@@ -237,6 +239,7 @@
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.ComboBox comboBoxPortal;
+        private System.Windows.Forms.ComboBox comboBoxName;
     }
 }
 
