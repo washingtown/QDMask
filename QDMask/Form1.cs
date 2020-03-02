@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
+using SeleniumExtras.WaitHelpers;
 
 namespace QDMask
 {
@@ -59,6 +60,8 @@ namespace QDMask
             }
             try
             {
+                WebDriverWait wait = new WebDriverWait(webDriver, new TimeSpan(0, 0, 10));
+                wait.Until(SeleniumExtras.WaitHelpers.ExpectedConditions.ElementExists(By.CssSelector(".vux-check-icon,.des")));
                 IWebElement okElement = webDriver.FindElement(By.ClassName("vux-check-icon"));
                 okElement.Click();
                 IWebElement[] inputText = webDriver.FindElements(By.ClassName("weui-input")).ToArray();
@@ -142,6 +145,11 @@ namespace QDMask
             //启动Chrome
             ChromeOptions options = new ChromeOptions();
             options.AddArgument("disable-web-security");
+            string chromeBinPath = Environment.CurrentDirectory + @"\Chrome\App\Chrome.exe";
+            if (File.Exists(chromeBinPath))
+            {
+                options.BinaryLocation = chromeBinPath;
+            }
             this.webDriver = new ChromeDriver(options);
         }
 
