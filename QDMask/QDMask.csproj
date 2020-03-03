@@ -7,7 +7,7 @@
     <ProjectGuid>{1ABF6CF1-49E7-436C-86C3-B79940A35663}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>QDMask</RootNamespace>
-    <AssemblyName>QDMask</AssemblyName>
+    <AssemblyName>抢口罩</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
